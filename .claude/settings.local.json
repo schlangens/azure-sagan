@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod:*)",
+      "Bash(ls:*)",
+      "Bash(unzip:*)",
+      "Bash(rm:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)",
+      "Bash(python3 -m pip install --user ansible)",
+      "Bash(ansible-playbook:*)",
+      "Bash(ssh-keygen:*)",
+      "Bash(az account:*)",
+      "Bash(./scripts/deploy.sh:*)",
+      "Bash(terraform destroy:*)",
+      "Bash(curl:*)",
+      "Bash(PUBLIC_IP=\"172.174.2.181\")",
+      "Bash(ssh:*)",
+      "Bash(./scripts/teardown.sh:*)",
+      "Bash(terraform show:*)",
+      "Bash(az group list:*)"
+    ],
+    "deny": []
+  }
+}

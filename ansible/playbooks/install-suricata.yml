@@ -1,0 +1,68 @@
+---
+- name: Install and configure Suricata
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  vars:
+    suricata_version: "7.0.2"
+
+  tasks:
+    - name: Install Suricata package
+      apt:
+        name:
+          - suricata
+          - suricata-update
+        state: present
+
+    - name: Update Suricata rules with suricata-update
+      command: suricata-update
+      environment:
+        HOME: /var/lib/suricata
+
+    - name: Create test Suricata rules
+      copy:
+        content: |
+          alert tcp any any -> any any (msg:"TEST ALERT - Suricata is working"; sid:1000001; rev:1;)
+          alert icmp any any -> any any (msg:"ICMP Packet detected"; sid:1000002; rev:1;)
+          alert tcp any any -> any 80 (msg:"HTTP Request detected"; sid:1000003; rev:1;)
+          alert tcp any any -> any 443 (msg:"HTTPS Request detected"; sid:1000004; rev:1;)
+        dest: /etc/suricata/rules/test.rules
+        owner: suricata
+        group: suricata
+        mode: '0644'
+
+    - name: Update Suricata configuration
+      blockinfile:
+        path: /etc/suricata/suricata.yaml
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - Test Rules"
+        insertafter: "rule-files:"
+        block: |2
+            - /etc/suricata/rules/test.rules
+      notify: restart suricata
+
+    - name: Create suricata systemd service
+      template:
+        src: ../templates/suricata.service.j2
+        dest: /etc/systemd/system/suricata.service
+        mode: '0644'
+      notify: 
+        - reload systemd
+        - restart suricata
+
+    - name: Enable and start suricata service
+      systemd:
+        name: suricata
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+  handlers:
+    - name: reload systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: restart suricata
+      systemd:
+        name: suricata
+        state: restarted

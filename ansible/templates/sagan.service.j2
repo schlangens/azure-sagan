@@ -1,0 +1,15 @@
+[Unit]
+Description=Sagan Log Analysis Engine
+After=network.target
+
+[Service]
+Type=forking
+User=sagan
+Group=sagan
+ExecStart=/usr/bin/sagan -f /etc/sagan/sagan.yaml -D
+ExecReload=/bin/kill -HUP $MAINPID
+PIDFile=/var/run/sagan/sagan.pid
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

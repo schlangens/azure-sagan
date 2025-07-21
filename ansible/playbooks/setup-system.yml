@@ -1,0 +1,98 @@
+---
+- name: Setup Debian system for Sagan and Suricata
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+        autoremove: yes
+
+    - name: Install essential packages
+      apt:
+        name:
+          - curl
+          - wget
+          - git
+          - build-essential
+          - autoconf
+          - automake
+          - libtool
+          - pkg-config
+          - libpcre3-dev
+          - libjansson-dev
+          - libfastjson-dev
+          - libestr-dev
+          - liblognorm-dev
+          - libyaml-dev
+          - libpcap-dev
+          - zlib1g-dev
+          - libcap-ng-dev
+          - libmagic-dev
+          - libnet1-dev
+          - libnetfilter-queue-dev
+          - libnfnetlink-dev
+          - libhiredis-dev
+          - libmaxminddb-dev
+          - rustc
+          - cargo
+        state: present
+
+    - name: Create sagan user
+      user:
+        name: sagan
+        system: yes
+        shell: /bin/false
+        home: /var/lib/sagan
+        create_home: yes
+
+    - name: Create suricata user
+      user:
+        name: suricata
+        system: yes
+        shell: /bin/false
+        home: /var/lib/suricata
+        create_home: yes
+
+    - name: Create directories for Sagan
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: sagan
+        group: sagan
+        mode: '0755'
+      loop:
+        - /etc/sagan
+        - /var/log/sagan
+        - /var/lib/sagan
+        - /var/run/sagan
+
+    - name: Create directories for Suricata
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: suricata
+        group: suricata
+        mode: '0755'
+      loop:
+        - /etc/suricata
+        - /var/log/suricata
+        - /var/lib/suricata
+        - /var/run/suricata
+
+    - name: Install Python pip
+      apt:
+        name: python3-pip
+        state: present
+
+    - name: Install Python YAML module
+      pip:
+        name: PyYAML
+        state: present

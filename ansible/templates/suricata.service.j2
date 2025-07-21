@@ -1,0 +1,15 @@
+[Unit]
+Description=Suricata Intrusion Detection Service
+After=network.target
+
+[Service]
+Type=forking
+User=suricata
+Group=suricata
+ExecStart=/usr/bin/suricata -c /etc/suricata/suricata.yaml -i any -D
+ExecReload=/bin/kill -HUP $MAINPID
+PIDFile=/var/run/suricata.pid
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

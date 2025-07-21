@@ -1,0 +1,84 @@
+---
+- name: Test Sagan and Suricata installations
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Check if Sagan service is running
+      systemd:
+        name: sagan
+      register: sagan_status
+
+    - name: Check if Suricata service is running
+      systemd:
+        name: suricata
+      register: suricata_status
+
+    - name: Verify Sagan binary installation
+      stat:
+        path: /opt/sagan/bin/sagan
+      register: sagan_binary
+
+    - name: Verify Suricata binary installation
+      stat:
+        path: /usr/bin/suricata
+      register: suricata_binary
+
+    - name: Check Sagan configuration file
+      stat:
+        path: /etc/sagan/sagan.yaml
+      register: sagan_config
+
+    - name: Check Suricata configuration file
+      stat:
+        path: /etc/suricata/suricata.yaml
+      register: suricata_config
+
+    - name: Check Sagan rules directory
+      stat:
+        path: /opt/sagan-rules
+      register: sagan_rules_dir
+
+    - name: Check Suricata test rules
+      stat:
+        path: /etc/suricata/rules/test.rules
+      register: suricata_test_rules
+
+    - name: Generate test syslog message for Sagan
+      shell: logger -p auth.alert "Test alert message from Sagan test"
+      
+    - name: Generate test network traffic for Suricata
+      shell: ping -c 3 8.8.8.8
+      ignore_errors: yes
+
+    - name: Wait for log processing
+      pause:
+        seconds: 10
+
+    - name: Check Sagan alert log
+      shell: tail -n 20 /var/log/sagan/alert.log
+      register: sagan_alerts
+      ignore_errors: yes
+
+    - name: Check Suricata alert log
+      shell: tail -n 20 /var/log/suricata/fast.log
+      register: suricata_alerts
+      ignore_errors: yes
+
+    - name: Display test results
+      debug:
+        msg: |
+          === SAGAN TEST RESULTS ===
+          Service Status: {{ sagan_status.status.ActiveState }}
+          Binary Exists: {{ sagan_binary.stat.exists }}
+          Config Exists: {{ sagan_config.stat.exists }}
+          Rules Directory: {{ sagan_rules_dir.stat.exists }}
+          Recent Alerts: {{ sagan_alerts.stdout_lines | default(['No alerts found']) }}
+          
+          === SURICATA TEST RESULTS ===
+          Service Status: {{ suricata_status.status.ActiveState }}
+          Binary Exists: {{ suricata_binary.stat.exists }}
+          Config Exists: {{ suricata_config.stat.exists }}
+          Test Rules: {{ suricata_test_rules.stat.exists }}
+          Recent Alerts: {{ suricata_alerts.stdout_lines | default(['No alerts found']) }}

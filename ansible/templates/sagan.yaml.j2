@@ -1,0 +1,99 @@
+%YAML 1.1
+---
+
+# Sagan configuration file
+
+sagan-core:
+  
+  # Core configuration
+  core:
+    default-host: "{{ ansible_hostname }}"
+    default-port: 514
+    default-proto: udp
+    dns-warnings: enabled
+    source-lookup: enabled
+    
+  # Sagan user/group that the Sagan processes will run under
+  sagan-user: sagan
+  sagan-group: sagan
+
+  # What Sagan should "listen" on
+  listen:
+    interface: any
+    port: 514
+
+  # Where to "classify" events to
+  classification-file: /opt/sagan-rules/classification.config
+
+  # Sagan "Rulesets" or "rule files".  This tells Sagan where to load the
+  # rules from
+  rule-files:
+    - /opt/sagan-rules/*.rules
+
+  # Global thresholds. This prevents to many events from "firing" to 
+  # quickly
+  threshold-file: /etc/sagan/threshold.config
+
+  # GeoIP2 database location
+  geoip2-country-file: /usr/share/GeoIP/GeoLite2-Country.mmdb
+  geoip2-city-file: /usr/share/GeoIP/GeoLite2-City.mmdb
+
+# "liblognorm" is the log normalization library.  This is used to extract
+# data from log messages
+liblognorm:
+  normalize-rulebase: /opt/sagan-rules/normalization.rulebase
+
+# Output formats
+outputs:
+
+  # Log to a file
+  - alert-file:
+      enabled: yes
+      filename: /var/log/sagan/alert.log
+
+  # Log to syslog
+  - alert-syslog:
+      enabled: yes
+      facility: LOG_AUTH
+      priority: LOG_ALERT
+      options: LOG_PID
+
+  # Store data to a MySQL/MariaDB database
+  # - alert-mysql:
+  #     enabled: no
+  #     server: 127.0.0.1
+  #     username: sagan_user
+  #     password: SaganPassword
+  #     database: sagan_db
+  #     port: 3306
+  #     table: alert
+
+# Redis Support
+redis:
+  enabled: no
+  server: 127.0.0.1
+  port: 6379
+  password: mypassword
+
+# These are processors that can be loaded at runtime
+processors:
+
+  # "perfmonitor" - Shows performance data on shutdown
+  - perfmonitor:
+      enabled: yes
+      time: 600
+      file: /var/log/sagan/sagan.stats
+
+  # "track-clients" - This tracks and stores data about the systems
+  # sending Sagan log data
+  - track-clients:
+      enabled: yes
+      timeout: 360
+
+  # "bluedot" - Quadrant Information Security "Bluedot" IP reputation
+  # system.  For more information,  see https://quadrantsec.com/about/bluedot/
+  # - bluedot:
+  #     enabled: no
+  #     device-id: MY_DEVICE_ID_HASH
+  #     max-cache: 300000
+  #     cache-timeout: 900

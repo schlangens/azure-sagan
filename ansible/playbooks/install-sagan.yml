@@ -1,0 +1,54 @@
+---
+- name: Install and configure Sagan
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Install Sagan package
+      apt:
+        name:
+          - sagan
+          - sagan-rules
+        state: present
+
+    - name: Clone Sagan rules repository
+      git:
+        repo: https://github.com/quadrantsec/sagan-rules.git
+        dest: /opt/sagan-rules
+        force: yes
+
+    - name: Create sagan configuration
+      template:
+        src: ../templates/sagan.yaml.j2
+        dest: /etc/sagan/sagan.yaml
+        owner: sagan
+        group: sagan
+        mode: '0644'
+      notify: restart sagan
+
+    - name: Create sagan systemd service
+      template:
+        src: ../templates/sagan.service.j2
+        dest: /etc/systemd/system/sagan.service
+        mode: '0644'
+      notify: 
+        - reload systemd
+        - restart sagan
+
+    - name: Enable and start sagan service
+      systemd:
+        name: sagan
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+  handlers:
+    - name: reload systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: restart sagan
+      systemd:
+        name: sagan
+        state: restarted
