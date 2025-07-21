@@ -97,7 +97,7 @@ ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa
 
 ### 1. Clone the Repository
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/schlangens/azure-sagan/
 cd azure-sagan
 ```
 
